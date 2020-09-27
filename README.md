@@ -16,6 +16,13 @@ Here you can find services I use mainly for administering my infrastructure:
 
 ### Hass
 
+Services used for my [HomeAssistant](https://www.home-assistant.io/), my home automation hub of choice.
+
+1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for home assistant's data.
+1. [Mosquitto](https://mosquitto.org/) - An open source MQTT broker used as a pub-sub server for many of my devices.
+1. [HomeAssistant](https://www.home-assistant.io/) - An open source home automation hub.
+1. [MotionEye](https://github.com/ccrisan/motioneye) - A service to gather and control cctv cameras.
+
 ### Media
 
 ### Network
