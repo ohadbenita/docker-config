@@ -28,9 +28,14 @@ Services used for my [HomeAssistant](https://www.home-assistant.io/), my home au
 All media-related services used to manage my media library.
 
 1. [SickChill](https://github.com/SickChill/SickChill) - Used to automatically download torrents and their metadata.
-2. [Transmission](https://transmissionbt.com/) - A simple bittorrent client.
+1. [Transmission](https://transmissionbt.com/) - A simple bittorrent client.
 
 ### Network
+
+All services related to external access to the different services I run are listed here.
+
+1. [NGINX](https://hub.docker.com/r/linuxserver/letsencrypt) - A powerful reverse proxy for securely exposing public services. This container also takes care of the renewal of the DuckDNS SSL certificate.
+1. [DuckDNS](https://www.duckdns.org/) - A free dynamic DNS hosted on AWS. Used to update my public IP address with my registered domain.
 
 ### NextCloud
 
