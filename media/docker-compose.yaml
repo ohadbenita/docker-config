@@ -21,6 +21,7 @@ services:
     network_mode: host
     labels:
       - "com.ouroboros.enable=true"
+  
   transmission:
     container_name: media-transmission
     restart: unless-stopped

@@ -25,6 +25,9 @@ Services used for my [HomeAssistant](https://www.home-assistant.io/), my home au
 
 ### Media
 
+1. [SickChill](https://github.com/SickChill/SickChill) - Used to automatically download torrents and their metadata.
+2. [Transmission](https://transmissionbt.com/) - A simple bittorrent client.
+
 ### Network
 
 ### NextCloud
