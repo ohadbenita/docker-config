@@ -39,4 +39,14 @@ All services related to external access to the different services I run are list
 
 ### NextCloud
 
+A dropbox-like service used to synchronize local files with mobile devices.
+
+1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for NextCloud's data.
+1. [NextCloud](https://nextcloud.com/) - A file-synchronization and collaboration service.
+
 ### Traccar
+
+A service used to report location data locally without hosting it on any external service.
+
+1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for Traccar's data.
+1. [Traccar](https://www.traccar.org/) - Traccar is the leading GPS tracking software. Vehicle and personal tracking. Self hosting and cloud-based solution. Real time view, reports, notifications.
