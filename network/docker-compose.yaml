@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  letsencrypt:
+    container_name: network-nginx-letsencrypt
+    restart: always
+    image: linuxserver/letsencrypt
+    volumes:
+      - /volume1/Media/SmartHome/Config/letsencrypt/config:/config
+    environment:      
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - VALIDATION=duckdns
+      - DUCKDNSTOKEN=${DUCKDNS_TOKEN}
+      - ONLY_SUBDOMAINS=false
+      - EMAIL=${DNS_EMAIL}
+      - URL=${DNS_URL}
+      - SUBDOMAINS=${DNS_SUBDOMAINS}
+      - TZ=Asia/Jerusalem
+    labels:
+      - "com.ouroboros.enable=true"
+    ports:
+      - "180:80"
+      - "1443:443"
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+  
+  duckdns:
+    container_name: network-duckdns
+    restart: always
+    image: linuxserver/duckdns
+    volumes:
+      - /volume1/Media/SmartHome/Config/duckdns/config:/config
+      - /volume1/Media/SmartHome/Config/HomeAssistant/home-assistant.log:/log/home-assistant.log
+    labels:
+      - "com.ouroboros.enable=true"
+    environment:      
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+      - LOG_FILE=true
+      - TOKEN=${DUCKDNS_TOKEN}
+      - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+    network_mode: host

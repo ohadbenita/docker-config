@@ -1,0 +1,81 @@
+version: '3'
+networks:
+  default:
+    external:
+      name: bridge
+      
+services:
+  cloud9:
+    container_name: admin-cloud9
+    restart: unless-stopped
+    image: sapk/cloud9:latest
+    labels:
+      - "com.ouroboros.enable=true"
+    volumes:
+      - /volume1/Media/SmartHome/Backup/docker-compose:/workspace/docker-compose
+      - /volume1/Media/SmartHome/Config/HomeAssistant:/workspace/hass-config
+      - /volume1/Media/SmartHome/Config/examples:/workspace/examples
+      - /etc/localtime:/etc/localtime:ro    
+    environment:      
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+    command: ["--auth", "${C9_USER}:${C9_PASS}"]
+    ports:      
+      - "8181:8181"
+    network_mode: bridge
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+
+  prune:
+    container_name: admin-prune-cleanup
+    image: "liske/docker-prune"
+    command: ["image"]
+    network_mode: bridge
+    environment:
+      - SLEEP=10800 
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "com.ouroboros.enable=true"
+ 
+  auto-updater:
+    image: pyouroboros/ouroboros:latest
+    container_name: admin-ouroboros
+    network_mode: bridge
+    restart: unless-stopped
+    environment:
+      - CLEANUP=true
+      - DOCKER_SOCKETS="unix://var/run/docker.sock"
+      - SELF_UPDATE=true
+      - LATEST=true
+      - LABEL_ENABLE=true
+      - LABELS_ONLY=true
+      - TZ=Asia/Jerusalem
+      - NOTIFIERS=${OUROBOROS_TELEGRAM_BOT_URL}
+      - LOG_LEVEL=debug
+      - CRON="*/30 * * * *"
+      - REPO_USER=${OUROBOROS_REPO_USER}
+      - REPO_PASS=${OUROBOROS_REPO_PASS}
+    labels:
+       - "com.ouroboros.enable=true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+
+  portainer:
+    image: portainer/portainer
+    container_name: admin-portainer
+    command: -H unix:///var/run/docker.sock
+    restart: always
+    network_mode: bridge
+    ports:
+      - 9000:9000
+      - 8000:8000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /volume1/Media/SmartHome/Config/portainer:/data

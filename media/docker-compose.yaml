@@ -1,0 +1,40 @@
+version: '3'
+networks:
+  default:
+    external:
+      name: bridge
+      
+services:
+  sickchill:
+    container_name: media-sickchill
+    restart: unless-stopped
+    image: linuxserver/sickchill
+    environment:      
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media:/tv
+      - /volume1/Media/SmartHome/Config/sickrage/downloads:/downloads
+      - /volume1/Media/SmartHome/Config/sickrage/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host
+    labels:
+      - "com.ouroboros.enable=true"
+  transmission:
+    container_name: media-transmission
+    restart: unless-stopped
+    image: linuxserver/transmission
+    environment:      
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media/SmartHome/Config/transmission/config:/config
+      - /volume1/Media/Incoming:/downloads
+      - /volume1/Media/Incoming/-WATCH-FOLDER-:/watch
+      - /etc/localtime:/etc/localtime:ro    
+    network_mode: host
+    privileged: true
+    labels:
+      - "com.ouroboros.enable=true"

@@ -1,0 +1,107 @@
+version: '3'
+networks:
+  default:
+    external:
+      name: bridge
+      
+services:
+  mariadb:
+    container_name: hass-mariadb
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    restart: unless-stopped
+    image: mariadb:10-bionic
+    volumes:
+      - /volume1/Media/SmartHome/Config/mariadb:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro    
+    environment:
+      - TZ=Asia/Jerusalem
+      - MYSQL_ROOT_PASSWORD=${MARIADB_PASS}
+      - MYSQL_DATABASE=hass_db
+      - PUID=1026
+      - PGID=101
+      - MYSQL_USER=homeassistant
+      - MYSQL_PASSWORD=${MARIADB_PASS}
+    network_mode: host
+    labels:
+      - com.ouroboros.enable="false"
+
+  mosquitto:
+    container_name: hass-mosquitto
+    restart: unless-stopped
+    image: eclipse-mosquitto:1.6.10
+    volumes:
+      - /volume1/Media/SmartHome/Config/mqtt/config:/mosquitto/config
+      - /volume1/Media/SmartHome/Config/mqtt/data:/mqtt/data
+      - /volume1/Media/SmartHome/Config/mqtt/log:/mqtt/log
+    environment:      
+      - TZ=Asia/Jerusalem
+    ports:
+      - "1883:1883"
+      - "1884:1884"
+      - "9001:9001"
+    network_mode: bridge
+    labels:
+      - "com.ouroboros.enable=false"
+
+  homeassistant:
+    container_name: hass-homeassistant
+    restart: always
+    image: homeassistant/home-assistant:0.115.3
+    depends_on:
+      - "mariadb"
+      - "mosquitto"
+    volumes:
+      - /volume1/Media/SmartHome/Config/HomeAssistant:/config
+      - /volume1/Media/SmartHome/Config/HomeAssistant/.sshkeys:/root/.ssh
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:      
+      - TZ=Asia/Jerusalem
+    network_mode: host
+    privileged: true
+
+  tasmoadmin:
+    container_name: hass-tasmoadmin
+    restart: unless-stopped
+    image: raymondmm/tasmoadmin
+    volumes:
+      - /volume1/Media/SmartHome/Config/tasmoadmin/data:/data
+    environment:      
+      - TZ=Asia/Jerusalem
+      - SSL=false
+    ports:
+      - "6666:443"
+      - "7777:80"
+    network_mode: bridge
+    labels:
+      - "com.ouroboros.enable=true"
+
+  motioneye:
+    container_name: hass-motioneye
+    image: ccrisan/motioneye:master-amd64
+    restart: unless-stopped
+    ports:
+      - "8881:8081"
+      - "8765:8765"
+    volumes:
+      - /volume1/Media/SmartHome/Config/motioneye:/etc/motioneye
+      - /volume1/Media/SmartHome/Config/motioneye/var/lib/motioneye:/var/lib/motioneye
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: bridge
+  
+  havid-19:
+    container_name: hass-havid-19
+    image: techblog/havid-19
+    network_mode: bridge
+    restart: always
+    labels:
+      - "com.ouroboros.enable=true"
+    environment:
+      - USER_ID=${HAVID_USER_ID}
+      - USER_KEY=${HAVID_USER_KEY}
+    ports:
+      - "6700:6700"
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+
