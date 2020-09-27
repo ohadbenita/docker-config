@@ -53,3 +53,14 @@ A service used to report location data locally without hosting it on any externa
 
 ## Getting Started
 
+- In my setup, the configuration of all services reside under `/volume1/Media/Config/name_of_service`. This gives the advantage of keeping all configuration related to my docker infrastructure organized in one place which is easy to maintain and take backups.
+- To try out one of the services:
+  - Create `docker-compose.yaml` and copy the relevant service's configuration.
+  - Wherever I refer to ${ENV_VAR} - create an [`.env`](https://docs.docker.com/compose/environment-variables/) file in the same folder as your `docker-compose.yaml` with your own values for the environment variables.
+- Each of the services' configuration will be documented under their relevant sections:
+  - [Administration](./docs/admin.md)
+  - [Home Assistant](./docs/hass.md)
+  - [Media](./docs/media.md)
+  - [Network](./docs/network.md)
+  - [NextCloud](./docs/nextcloud.md)
+  - [Traccar](./docs/traccar.md)
