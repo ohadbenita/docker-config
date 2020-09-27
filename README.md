@@ -25,6 +25,8 @@ Services used for my [HomeAssistant](https://www.home-assistant.io/), my home au
 
 ### Media
 
+All media-related services used to manage my media library.
+
 1. [SickChill](https://github.com/SickChill/SickChill) - Used to automatically download torrents and their metadata.
 2. [Transmission](https://transmissionbt.com/) - A simple bittorrent client.
 
