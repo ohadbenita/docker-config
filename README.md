@@ -52,3 +52,4 @@ A service used to report location data locally without hosting it on any externa
 1. [Traccar](https://www.traccar.org/) - Traccar is the leading GPS tracking software. Vehicle and personal tracking. Self hosting and cloud-based solution. Real time view, reports, notifications.
 
 ## Getting Started
+
