@@ -1,2 +1,5 @@
 # docker-compose environment files
 *.env
+
+# Cloud 9 directory
+.c9/
