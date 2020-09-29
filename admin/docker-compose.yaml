@@ -6,22 +6,23 @@ networks:
       
 services:
   cloud9:
+    image: linuxserver/cloud9
     container_name: admin-cloud9
-    restart: unless-stopped
-    image: sapk/cloud9:latest
-    labels:
-      - "com.ouroboros.enable=true"
-    volumes:
-      - /volume1/Media/SmartHome/Backup/docker-compose:/workspace/docker-compose
-      - /volume1/Media/SmartHome/Config/HomeAssistant:/workspace/hass-config
-      - /volume1/Media/SmartHome/Config/examples:/workspace/examples
-      - /etc/localtime:/etc/localtime:ro    
     environment:      
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
-    command: ["--auth", "${C9_USER}:${C9_PASS}"]
-    ports:      
-      - "8181:8181"
+      - TZ=Asis/Jerusalem
+      - USERNAME=${C9_USER}
+      - PASSWORD=${C9_PASS}
+    volumes:
+      - /volume1/Media/SmartHome/Backup/docker-compose:/code/docker-compose
+      - /volume1/Media/SmartHome/Config/HomeAssistant:/code/hass-config
+      - /volume1/Media/SmartHome/Config/examples:/code/examples
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8181:8000
+    restart: unless-stopped
     network_mode: bridge
     dns:
       - 8.8.8.8
