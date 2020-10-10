@@ -2,9 +2,9 @@ version: '3'
 
 services:
   letsencrypt:
-    container_name: network-nginx-letsencrypt
+    container_name: network-swag
     restart: always
-    image: linuxserver/letsencrypt
+    image: linuxserver/swag
     volumes:
       - /volume1/Media/SmartHome/Config/letsencrypt/config:/config
     environment:      
