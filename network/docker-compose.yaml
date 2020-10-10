@@ -15,7 +15,7 @@ services:
       - ONLY_SUBDOMAINS=false
       - EMAIL=${DNS_EMAIL}
       - URL=${DNS_URL}
-      - SUBDOMAINS=${DNS_SUBDOMAINS}
+      - SUBDOMAINS=wildcard
       - TZ=Asia/Jerusalem
     labels:
       - "com.ouroboros.enable=true"
