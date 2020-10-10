@@ -3,25 +3,24 @@ networks:
   default:
     external:
       name: bridge
-      
+
 services:
-  cloud9:
-    image: linuxserver/cloud9
-    container_name: admin-cloud9
-    environment:      
+  code-server:
+    image: linuxserver/code-server
+    container_name: code-server
+    environment:
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
-      - TZ=Asis/Jerusalem
-      - USERNAME=${C9_USER}
-      - PASSWORD=${C9_PASS}
+      - TZ=Asia/Jerusalem
+      - PASSWORD=${CODE_SERVER_PASS}
+      - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASS}
     volumes:
-      - /volume1/Media/SmartHome/Backup/docker-compose:/code/docker-compose
-      - /volume1/Media/SmartHome/Config/HomeAssistant:/code/hass-config
-      - /volume1/Media/SmartHome/Config/examples:/code/examples
-      - /etc/localtime:/etc/localtime:ro
+      - /volume1/Media/SmartHome/Config/code-server:/config
+      - /volume1/Media/SmartHome/Config/HomeAssistant:/config/workspace/hass-config
+      - /volume1/Media/SmartHome/Backup/docker-compose:/config/workspace/docker-compose
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
-      - 8181:8000
+      - 8443:8443
     restart: unless-stopped
     network_mode: bridge
     dns:
@@ -29,18 +28,38 @@ services:
       - 4.4.4.4
       - 1.1.1.1
 
+  cloud9:
+    container_name: admin-cloud9
+    restart: unless-stopped
+    image: sapk/cloud9:latest
+    labels:
+      - "com.ouroboros.enable=true"
+    volumes:
+      - /volume1/Media/SmartHome/Backup/docker-compose:/workspace/docker-compose
+      - /volume1/Media/SmartHome/Config/HomeAssistant:/workspace/hass-config
+      - /volume1/Media/SmartHome/Config/examples:/workspace/examples
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+    command: ["--auth", "${C9_USER}:${C9_PASS}"]
+    ports:
+      - "8181:8181"
+    network_mode: bridge
+
   prune:
     container_name: admin-prune-cleanup
     image: "liske/docker-prune"
     command: ["image"]
     network_mode: bridge
     environment:
-      - SLEEP=10800 
+      - SLEEP=10800
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "com.ouroboros.enable=true"
- 
+
   auto-updater:
     image: pyouroboros/ouroboros:latest
     container_name: admin-ouroboros
