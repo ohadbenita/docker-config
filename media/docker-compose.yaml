@@ -3,13 +3,13 @@ networks:
   default:
     external:
       name: bridge
-      
+
 services:
   sickchill:
     container_name: media-sickchill
     restart: unless-stopped
     image: linuxserver/sickchill
-    environment:      
+    environment:
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
       - TZ=Asia/Jerusalem
@@ -21,12 +21,12 @@ services:
     network_mode: host
     labels:
       - "com.ouroboros.enable=true"
-  
+
   transmission:
     container_name: media-transmission
     restart: unless-stopped
     image: linuxserver/transmission
-    environment:      
+    environment:
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
       - TZ=Asia/Jerusalem
@@ -34,7 +34,7 @@ services:
       - /volume1/Media/SmartHome/Config/transmission/config:/config
       - /volume1/Media/Incoming:/downloads
       - /volume1/Media/Incoming/-WATCH-FOLDER-:/watch
-      - /etc/localtime:/etc/localtime:ro    
+      - /etc/localtime:/etc/localtime:ro
     network_mode: host
     privileged: true
     labels:

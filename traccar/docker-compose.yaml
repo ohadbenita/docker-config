@@ -11,7 +11,7 @@ services:
       - /volume1/Media/SmartHome/Config/traccar-db:/var/lib/mysql
     environment:
       - PUID=1026
-      - PGID=101  
+      - PGID=101
       - MYSQL_ROOT_PASSWORD=${MYSQL_PASS}
       - MYSQL_PASSWORD=${MYSQL_PASS}
       - MYSQL_DATABASE=traccar
@@ -22,7 +22,7 @@ services:
       - "3334:3306"
     labels:
       - "com.ouroboros.enable=true"
-  
+
   traccar-app:
     container_name: traccar-app
     image: traccar/traccar
@@ -40,10 +40,9 @@ services:
       - /volume1/Media/SmartHome/Config/traccar/logs:/opt/traccar/logs:rw
       - /volume1/Media/SmartHome/Config/traccar/conf/traccar.xml:/opt/traccar/conf/traccar.xml:ro
       - /etc/localtime:/etc/localtime:ro
-    environment:      
+    environment:
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
       - TZ=Asia/Jerusalem
     labels:
       - "com.ouroboros.enable=true"
-      
