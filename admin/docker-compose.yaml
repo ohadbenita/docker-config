@@ -14,6 +14,7 @@ services:
       - TZ=Asia/Jerusalem
       - PASSWORD=${CODE_SERVER_PASS}
       - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASS}
+      - DOCKER_MODS=linuxserver/mods:code-server-docker
     volumes:
       - /volume1/Media/SmartHome/Config/code-server:/config
       - /volume1/Media/SmartHome/Config/HomeAssistant:/config/workspace/hass-config
