@@ -21,11 +21,11 @@ services:
     ports:
       - "3334:3306"
     labels:
-      - "com.ouroboros.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
 
   traccar-app:
     container_name: traccar-app
-    image: traccar/traccar
+    image: traccar/traccar:4.12
     restart: unless-stopped
     ports:
       - "8082:8082"
@@ -45,4 +45,4 @@ services:
       - PGID=${DOCKER_PGID}
       - TZ=Asia/Jerusalem
     labels:
-      - "com.ouroboros.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"

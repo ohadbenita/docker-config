@@ -5,37 +5,194 @@ networks:
       name: bridge
 
 services:
-  sickchill:
-    container_name: media-sickchill
-    restart: unless-stopped
-    image: linuxserver/sickchill
-    environment:
-      - PUID=${DOCKER_PUID}
-      - PGID=${DOCKER_PGID}
-      - TZ=Asia/Jerusalem
-    volumes:
-      - /volume1/Media:/tv
-      - /volume1/Media/SmartHome/Config/sickrage/downloads:/downloads
-      - /volume1/Media/SmartHome/Config/sickrage/config:/config
-      - /etc/localtime:/etc/localtime:ro
-    network_mode: host
-    labels:
-      - "com.ouroboros.enable=true"
+  # transmission:
+  #   container_name: media-transmission
+  #   restart: unless-stopped
+  #   image: linuxserver/transmission:4.1.1
+  #   environment:
+  #     - PUID=${DOCKER_PUID}
+  #     - PGID=${DOCKER_PGID}
+  #     - TZ=Asia/Jerusalem
+  #   volumes:
+  #     - /volume1/Media/SmartHome/Config/transmission/config:/config
+  #     - /volume1/Media/Incoming:/downloads
+  #     - /volume1/Media/TV Shows:/data/tvshows
+  #     - /volume1/Media/Incoming/-WATCH-FOLDER-:/watch
+  #     - /etc/localtime:/etc/localtime:ro
+  #   network_mode: host
+  #   privileged: true
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=true"
 
-  transmission:
-    container_name: media-transmission
-    restart: unless-stopped
-    image: linuxserver/transmission
+  # jellyfin:
+  #   container_name: media-jellyfin
+  #   image: lscr.io/linuxserver/jellyfin:10.11.8
+  #   environment:
+  #     - PUID=${DOCKER_PUID}
+  #     - PGID=${DOCKER_PGID}
+  #     - TZ=Asia/Jerusalem
+  #     # - JELLYFIN_PublishedServerUrl=192.168.0.5 #optional
+  #   volumes:
+  #     - /volume1/Media/SmartHome/Config/jellyfin:/config
+  #     - /volume1/Media/TV Shows:/data/tvshows
+  #     - /volume1/Media/Movies:/data/movies/adults
+  #     - /volume1/Media/Kids Movies:/data/movies/kids
+  #   network_mode: bridge
+  #   devices:
+  #     - /dev/dri:/dev/dri
+  #   ports:
+  #     - 8096:8096
+  #     - 8920:8920 #optional
+  #     - 7359:7359/udp #optional
+  #     # - 1900:1900/udp #optional
+  #   restart: unless-stopped
+  #   dns:
+  #     - 8.8.8.8
+  #     - 4.4.4.4
+  #     - 1.1.1.1
+  #   labels:
+  #     - "com.centurylinklabs.watchtower.enable=true"
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: media-sonarr
+    network_mode: bridge
     environment:
       - PUID=${DOCKER_PUID}
       - PGID=${DOCKER_PGID}
       - TZ=Asia/Jerusalem
     volumes:
-      - /volume1/Media/SmartHome/Config/transmission/config:/config
+      - /volume1/Media/SmartHome/Config/sonarr:/config
       - /volume1/Media/Incoming:/downloads
-      - /volume1/Media/Incoming/-WATCH-FOLDER-:/watch
-      - /etc/localtime:/etc/localtime:ro
-    network_mode: host
-    privileged: true
+      - /volume1/Media/TV Shows:/data/tvshows
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
     labels:
-      - "com.ouroboros.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: media-radarr
+    network_mode: bridge
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media/SmartHome/Config/radarr:/config
+      - /volume1/Media/Incoming/:/downloads
+      - /volume1/Media/Movies:/movies
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  bazarr:
+    image: linuxserver/bazarr:latest
+    network_mode: bridge
+    container_name: media-bazarr
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media/SmartHome/Config/bazarr:/config
+      - /volume1/Media/Incoming:/downloads
+      - /volume1/Media/TV Shows:/data/tvshows
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  jackett:
+    image: linuxserver/jackett:latest
+    network_mode: bridge
+    container_name: media-jackett
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media/SmartHome/Config/jackett:/config
+    ports:
+      - "9117:9117"
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: media-prowlarr
+    network_mode: bridge
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /volume1/Media/SmartHome/Config/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  jellyseer:
+    image: fallenbagel/jellyseerr:2.7.3
+    network_mode: bridge
+    container_name: media-jellyseer
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+      - JELLYSEER_HOSTNAME=http://localhost:5055
+    volumes:
+      - /volume1/Media/SmartHome/Config/jellyseer:/app/config
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 4.4.4.4
+      - 1.1.1.1
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  minecraft:
+    image: itzg/minecraft-bedrock-server
+    container_name: media-minecraft-server
+    network_mode: bridge
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+      - EULA=TRUE
+      - MOTD="Benita's Awesome Minecraft server"
+      - DIFFICULTY=hard
+    ports:
+      - "19132:19132/udp"
+    volumes:
+      - /volume1/Media/SmartHome/Config/minecraft:/data
+    restart: unless-stopped

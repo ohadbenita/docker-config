@@ -16,7 +16,7 @@ services:
       - MYSQL_DATABASE=nextcloud
       - MYSQL_USER=nextcloud
     labels:
-      - "com.ouroboros.enable=true"
+       - "com.centurylinklabs.watchtower.enable=true"
   app:
     image: nextcloud
     ports:
@@ -29,4 +29,4 @@ services:
     depends_on:
       - "db"
     labels:
-      - "com.ouroboros.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"

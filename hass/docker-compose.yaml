@@ -7,11 +7,12 @@ networks:
 services:
   mariadb:
     container_name: hass-mariadb
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    image: mariadb:11.4
+    command: mariadbd --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     restart: unless-stopped
-    image: mariadb:10-bionic
     volumes:
       - /volume1/Media/SmartHome/Config/mariadb:/var/lib/mysql
+      - /volume1/Media/SmartHome/Config/mariadb-conf/conf.d:/etc/mysql/conf.d:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
       - TZ=Asia/Jerusalem
@@ -21,9 +22,10 @@ services:
       - PGID=101
       - MYSQL_USER=homeassistant
       - MYSQL_PASSWORD=${MARIADB_PASS}
+      - MARIADB_AUTO_UPGRADE=1
     network_mode: host
     labels:
-      - com.ouroboros.enable="false"
+      - "com.centurylinklabs.watchtower.enable=false"
 
   mosquitto:
     container_name: hass-mosquitto
@@ -41,23 +43,25 @@ services:
       - "9001:9001"
     network_mode: bridge
     labels:
-      - "com.ouroboros.enable=false"
+      - "com.centurylinklabs.watchtower.enable=false"
 
   homeassistant:
     container_name: hass-homeassistant
     restart: always
-    image: homeassistant/home-assistant:0.116.4
+    image: homeassistant/home-assistant:2026.10.2
     depends_on:
       - "mariadb"
       - "mosquitto"
     volumes:
-      - /volume1/Media/SmartHome/Config/HomeAssistant:/config
+      - /volume1/Media/SmartHome/Config/HASS:/config
       - /volume1/Media/SmartHome/Config/HomeAssistant/.sshkeys:/root/.ssh
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - TZ=Asia/Jerusalem
     network_mode: host
     privileged: true
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
 
   tasmoadmin:
     container_name: hass-tasmoadmin
@@ -73,34 +77,80 @@ services:
       - "7777:80"
     network_mode: bridge
     labels:
-      - "com.ouroboros.enable=true"
+      - "com.centurylinklabs.watchtower.enable=true"
 
-  motioneye:
-    container_name: hass-motioneye
-    image: ccrisan/motioneye:master-amd64
+  zigbee2mqtt_main_floor:
+    container_name: hass-zigbee2mqtt-main-floor
     restart: unless-stopped
-    ports:
-      - "8881:8081"
-      - "8765:8765"
+    image: koenkk/zigbee2mqtt:2.8.0
     volumes:
-      - /volume1/Media/SmartHome/Config/motioneye:/etc/motioneye
-      - /volume1/Media/SmartHome/Config/motioneye/var/lib/motioneye:/var/lib/motioneye
-      - /etc/localtime:/etc/localtime:ro
-    network_mode: bridge
-
-  havid-19:
-    container_name: hass-havid-19
-    image: techblog/havid-19
-    network_mode: bridge
-    restart: always
-    labels:
-      - "com.ouroboros.enable=true"
-    environment:
-      - USER_ID=${HAVID_USER_ID}
-      - USER_KEY=${HAVID_USER_KEY}
+      - /volume1/Media/SmartHome/Config/zigbee2mqtt/main-floor-data:/app/data
+      - /run/udev:/run/udev:ro
     ports:
-      - "6700:6700"
-    dns:
-      - 8.8.8.8
-      - 4.4.4.4
-      - 1.1.1.1
+      - 9999:8080
+    environment:
+      - TZ=Asia/Jerusalem
+    network_mode: bridge
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  zigbee2mqtt_upper_floor:
+    container_name: hass-zigbee2mqtt-upper-floor
+    restart: unless-stopped
+    image: koenkk/zigbee2mqtt:2.8.0
+    volumes:
+      - /volume1/Media/SmartHome/Config/zigbee2mqtt/upper-floor-data:/app/data
+      - /run/udev:/run/udev:ro
+    ports:
+      - 9998:8080
+    environment:
+      - TZ=Asia/Jerusalem
+    network_mode: bridge
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: hass-matter-server
+    restart: unless-stopped
+    security_opt:
+      - apparmor=unconfined
+    volumes:
+      - /volume1/Media/SmartHome/Config/matter-server/data:/data
+    network_mode: host
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  gen_ai_server:
+    image: hass-generative-ai:latest
+    container_name: hass-gen-ai-server
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - "6543:5000"
+    environment:
+      - HA_BASE_URL=${HA_BASE_URL}
+      - HA_TOKEN=${HA_TOKEN}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=US-EAST-1
+      - CLOTHES_RACK_CAMERA_ENTITY_ID=${CLOTHES_RACK_CAMERA_ENTITY_ID}
+      - CLOTHES_RACK_TARGET_ENTITY_ID=${CLOTHES_RACK_TARGET_ENTITY_ID}
+      - GAS_HEATER_CAMERA_ENTITY_ID=${GAS_HEATER_CAMERA_ENTITY_ID}
+      - GAS_HEATER_TARGET_ENTITY_ID=${GAS_HEATER_TARGET_ENTITY_ID}
+      - STUDY_ROOM_CAMERA_ENTITY_ID=${STUDY_ROOM_CAMERA_ENTITY_ID}
+      - STUDY_ROOM_CAMERA_TARGET_ENTITY_ID=${STUDY_ROOM_CAMERA_TARGET_ENTITY_ID}
+      - ENTRANCE_DOORBELL_CAMERA_ENTITY_ID=${ENTRANCE_DOORBELL_CAMERA_ENTITY_ID}
+      - ENTRANCE_DOORBELL_CAMERA_TARGET_ENTITY_ID=${ENTRANCE_DOORBELL_CAMERA_TARGET_ENTITY_ID}
+      - LPG_AUTO_SWITCHER_TARGET_ENTITY_ID=${LPG_AUTO_SWITCHER_TARGET_ENTITY_ID}
+      - LPG_AUTO_SWITCHER_CAMERA_ENTITY_ID=${LPG_AUTO_SWITCHER_CAMERA_ENTITY_ID}
+      - WATERING_LEAKAGE_CAMERA_ENTITY_ID=${WATERING_LEAKAGE_CAMERA_ENTITY_ID}
+      - WATERING_LEAKAGE_TARGET_ENTITY_ID=${WATERING_LEAKAGE_TARGET_ENTITY_ID}
+      - SOLAR_PANELS_CAMERA_ENTITY_ID=${SOLAR_PANELS_CAMERA_ENTITY_ID}
+      - SOLAR_PANELS_TARGET_ENTITY_ID=${SOLAR_PANELS_TARGET_ENTITY_ID}
+      - DEFAULTS_SOLAR_PANELS_CLEANLINESS_SCORE=${DEFAULTS_SOLAR_PANELS_CLEANLINESS_SCORE:-100}
+      - DEFAULTS_SOLAR_PANELS_CONFIDENCE=${DEFAULTS_SOLAR_PANELS_CONFIDENCE:-0.0}
+      - RAIN_VISUAL_CAMERA_ENTITY_ID=${RAIN_VISUAL_CAMERA_ENTITY_ID}
+      - RAIN_VISUAL_TARGET_ENTITY_ID=${RAIN_VISUAL_TARGET_ENTITY_ID}
+      - DEFAULTS_RAIN_VISUAL_STATE=${DEFAULTS_RAIN_VISUAL_STATE:-unknown}
+      - DEFAULTS_RAIN_VISUAL_CONFIDENCE=${DEFAULTS_RAIN_VISUAL_CONFIDENCE:-0}
