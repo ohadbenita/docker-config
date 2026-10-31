@@ -1,0 +1,119 @@
+networks:
+  admin:
+    name: admin
+  media_default:
+    external: true
+
+services:
+  portainer-agent:
+    image: portainer/agent:latest
+    container_name: admin-portainer-agent
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+    ports:
+      - "9001:9001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - admin
+
+  code-server:
+    image: lscr.io/linuxserver/code-server:latest
+    container_name: admin-code-server
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+      - PASSWORD=${CODE_SERVER_PASS}
+      - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASS}
+      - DEFAULT_WORKSPACE=/config/workspace
+      - DOCKER_MODS=linuxserver/mods:code-server-docker
+    volumes:
+      - /opt/admin/code-server:/config
+      - /opt/stacks:/config/workspace/stacks
+      - /opt/admin:/config/workspace/admin
+      - /opt/media:/config/workspace/media
+      - /mnt/synology:/config/workspace/synology
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8443:8443"
+    networks:
+      - admin
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+  wud:
+    image: getwud/wud:latest
+    container_name: admin-wud
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+    environment:
+      - TZ=Asia/Jerusalem
+      - WUD_WATCHER_LOCAL_SOCKET=/var/run/docker.sock
+      - WUD_WATCHER_LOCAL_CRON=0 4 * * *
+      - WUD_WATCHER_LOCAL_WATCHBYDEFAULT=false
+      - WUD_AUTH_ADMIN_USER=${WUD_AUTH_ADMIN_USER}
+      - WUD_AUTH_ADMIN_PASSWORD=${WUD_AUTH_ADMIN_PASSWORD}
+      - WUD_TRIGGER_TELEGRAM_INFRA_BOTTOKEN=${WUD_TRIGGER_TELEGRAM_INFRA_BOTTOKEN}
+      - WUD_TRIGGER_TELEGRAM_INFRA_CHATID=${WUD_TRIGGER_TELEGRAM_INFRA_CHATID}
+      - WUD_TRIGGER_TELEGRAM_INFRA_MODE=batch
+      - WUD_TRIGGER_TELEGRAM_INFRA_ONCE=true
+      - WUD_TRIGGER_TELEGRAM_INFRA_MESSAGEFORMAT=HTML
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/admin/wud:/store
+    ports:
+      - "3000:3000"
+    networks:
+      - admin
+
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: admin-uptime-kuma
+    restart: unless-stopped
+    networks:
+      - default
+      - media_default
+    ports:
+      - "3001:3001"
+    volumes:
+      - /opt/admin/uptime-kuma:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    labels:
+      - "wud.watch=true"
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: admin-homepage
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+    environment:
+      - HOMEPAGE_ALLOWED_HOSTS=192.168.1.167:3002,127.0.0.1:3002,localhost:3002,admin-homepage:3000,dash.benita.click
+    volumes:
+      - /opt/admin/homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "3002:3000"
+    networks:
+      - admin
+      - media_default
+
+  openspeedtest:
+    image: openspeedtest/latest
+    container_name: admin-openspeedtest
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+    ports:
+      - "3003:3000"
+    networks:
+      - admin

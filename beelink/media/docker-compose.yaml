@@ -1,0 +1,195 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
+    container_name: media-jellyfin
+    restart: unless-stopped
+
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+      - JELLYFIN_PublishedServerUrl=http://192.168.1.167:8096
+
+    volumes:
+      - /opt/media/jellyfin/config:/config
+      - /opt/media/jellyfin/cache:/cache
+      - /mnt/synology/jellyfin/TV Shows:/data/tvshows
+      - /mnt/synology/jellyfin/Movies:/data/movies/adults
+      - /mnt/synology/jellyfin/Kids Movies:/data/movies/kids
+    devices:
+      - /dev/dri:/dev/dri
+
+    group_add:
+      - "${VIDEO_GID}"
+      - "${RENDER_GID}"
+
+    ports:
+      - "8096:8096"
+      - "8920:8920"
+      - "7359:7359/udp"
+
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+
+    labels:
+      - "wud.watch=true"
+      - 'wud.tag.include=^12\.0ubu2604-ls\d+$$'
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:4.1.4
+    container_name: media-transmission
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /mnt/synology/jellyfin/config/transmission:/config
+      - /mnt/synology/jellyfin/downloads:/downloads
+      - /mnt/synology/jellyfin/downloads/watch:/watch
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - "wud.watch=true"
+      - 'wud.tag.include=^4\.\d+\.\d+$$'
+
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: media-radarr
+    restart: unless-stopped
+    ports:
+      - "7878:7878"
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /opt/media/radarr/config:/config
+      - /mnt/synology/jellyfin/downloads:/downloads
+      - /mnt/synology/jellyfin/Movies:/movies
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+
+  
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: media-sonarr
+    restart: unless-stopped
+    ports:
+      - "8989:8989"
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /opt/media/sonarr/config:/config
+      - /mnt/synology/jellyfin/downloads:/downloads
+      - /mnt/synology/jellyfin/TV Shows:/tv
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: media-bazarr
+    restart: unless-stopped
+    ports:
+      - "6767:6767"
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /mnt/synology/jellyfin/config/bazarr:/config
+      - /mnt/synology/jellyfin/Movies:/movies
+      - /mnt/synology/jellyfin/TV Shows:/tv
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: media-prowlarr
+    restart: unless-stopped
+    ports:
+      - "9696:9696"
+    environment:
+      - PUID=${DOCKER_PUID}
+      - PGID=${DOCKER_PGID}
+      - TZ=Asia/Jerusalem
+    volumes:
+      - /mnt/synology/jellyfin/config/prowlarr:/config
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+
+
+  jellyseerr:
+    image: seerr/seerr:latest
+    container_name: media-jellyseerr
+    restart: unless-stopped
+    ports:
+      - "5055:5055"
+    environment:
+      - TZ=Asia/Jerusalem
+      - LOG_LEVEL=info
+    volumes:
+      - /mnt/synology/jellyfin/config/jellyseerr:/app/config
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+
+
+  torrentleech-rss:
+    image: python:3.13-alpine
+    container_name: media-torrentleech-rss
+    restart: unless-stopped
+    command: python /app/app.py
+    environment:
+      - TL_RSS_24H_URL=${TL_RSS_24H_URL}
+      - TL_RSS_TOP100_URL=${TL_RSS_TOP100_URL}
+    volumes:
+      - /opt/stacks/media/torrentleech-rss:/app:ro
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    labels:
+      - "wud.watch=true"
+      - 'wud.tag.include=^3\.13-alpine$$'
+
+
+  media-health:
+    image: python:3.13-alpine
+    container_name: media-health
+    restart: unless-stopped
+    command: python /app/app.py
+    volumes:
+      - /opt/stacks/media/media-health:/app:ro
+      - /mnt/synology/jellyfin:/data:ro
+    ports:
+      - "8080:8080"
+    environment:
+      - CHECK_PATHS=/data:/data/config:/data/config/jellyfin:/data/downloads:/data/downloads/complete:/data/downloads/incomplete:/data/downloads/watch
+      - MEDIA_PATHS=/data/downloads/complete
+      - PORTAINER_URL=http://172.16.0.9:9000
+      - PORTAINER_ENDPOINT_ID=1
+      - PORTAINER_API_KEY=ptr_+MhhEDk0S8VFAA6JrnrnLlwmna1v9GzpJ+iH28MMGr0=
+      - SYNOLOGY_CONTAINERS=admin-portainer:admin-prune-cleanup:code-server:hass-gen-ai-server:hass-homeassistant:hass-mariadb:hass-matter-server:hass-mosquitto:hass-tasmoadmin:hass-zigbee2mqtt-main-floor:hass-zigbee2mqtt-upper-floor:network-cloudflare-tunnel-hass:telegram-relay
+    labels:
+      - "wud.watch=true"
+      - 'wud.tag.include=^3\.13-alpine$$'
