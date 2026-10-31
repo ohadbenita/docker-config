@@ -64,3 +64,9 @@ A service used to report location data locally without hosting it on any externa
   - [Network](./docs/network.md)
   - [NextCloud](./docs/nextcloud.md)
   - [Traccar](./docs/traccar.md)
+
+## Container configuration by host
+
+This repository is the shared Git source for container configuration on both machines. The existing root stack folders remain in place for Synology. Beelink uses separate files under `beelink/` because its Compose definitions and host paths differ.
+
+See [Beelink deployment notes](./docs/beelink.md). Keep real `.env` files on their hosts; the repository ignores them.
