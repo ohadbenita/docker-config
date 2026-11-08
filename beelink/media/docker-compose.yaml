@@ -1,4 +1,12 @@
 services:
+  isponsorblocktv:
+    image: ghcr.io/dmunozv04/isponsorblocktv:latest
+    container_name: media-isponsorblocktv
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - /opt/stacks/media/isponsorblocktv:/app/data
+
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
     container_name: media-jellyfin
