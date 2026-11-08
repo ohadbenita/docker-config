@@ -7,6 +7,24 @@ services:
     volumes:
       - /opt/stacks/media/isponsorblocktv:/app/data
 
+  isponsorblocktv-webui:
+    image: ghcr.io/toddwchapin/isponsorblocktv-webui:0.3.0
+    container_name: media-isponsorblocktv-webui
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - isponsorblocktv
+    env_file:
+      - /opt/stacks/media/isponsorblocktv/webui.env
+    environment:
+      WEBUI_HOST: 0.0.0.0
+      WEBUI_PORT: "8099"
+      WEBUI_SESSION_TTL: "3600"
+      WEBUI_DATA_DIR: /data
+      WEBUI_SERVICE_NAME: media-isponsorblocktv
+    volumes:
+      - /opt/stacks/media/isponsorblocktv:/data
+
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
     container_name: media-jellyfin
