@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}iSponsorBlockTV WebUI{% endblock %}</title>
+  {% if auth_enabled() %}
+  <meta name="csrf-token" content="{{ csrf_for_request(request) }}" />
+  {% endif %}
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preload" as="font" type="font/woff2"
+        href="/static/bricolage-grotesque-var.woff2" crossorigin />
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
+  <link rel="stylesheet" href="/static/app.css" />
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  {% if auth_enabled() %}
+  <script>
+    // Inject CSRF token into every htmx request. Document-level so it
+    // survives outerHTML swaps that replace whole sections.
+    document.addEventListener('htmx:configRequest', (e) => {
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      if (meta) e.detail.headers['X-CSRF-Token'] = meta.getAttribute('content');
+    });
+  </script>
+  {% endif %}
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header__inner">
+      <div class="header-row">
+        <a class="app-title" href="/" aria-label="iSponsorBlockTV WebUI home">
+          <span class="app-title__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="14" rx="2" />
+              <path d="M8 21h8 M12 18v3" />
+              <circle cx="12" cy="11" r="3" fill="currentColor" stroke="none" />
+            </svg>
+          </span>
+          iSponsorBlockTV
+        </a>
+        {% if request.url.path != "/login" %}
+        <span id="status-badge"
+              class="status-badge unknown"
+              aria-live="off"
+              hx-get="/status/badge"
+              hx-trigger="load, every 5s"
+              hx-swap="outerHTML">
+          <span class="status-dot" aria-hidden="true"></span>
+          checking…
+        </span>
+        {% endif %}
+        {% if auth_enabled() %}
+        <form method="post" action="/logout" class="logout-form">
+          <button type="submit" class="secondary outline">Sign out</button>
+        </form>
+        {% endif %}
+      </div>
+      <nav class="tab-bar" aria-label="Sections">
+        <a href="/"         class="tab {% if active == 'config'   %}active{% endif %}"
+           {% if active == 'config'   %}aria-current="page"{% endif %}>Config</a>
+        <a href="/pair"     class="tab {% if active == 'pair'     %}active{% endif %}"
+           {% if active == 'pair'     %}aria-current="page"{% endif %}>Pair Device</a>
+        <a href="/channels" class="tab {% if active == 'channels' %}active{% endif %}"
+           {% if active == 'channels' %}aria-current="page"{% endif %}>Channels</a>
+        <a href="/logs"     class="tab {% if active == 'logs'     %}active{% endif %}"
+           {% if active == 'logs'     %}aria-current="page"{% endif %}>Logs</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+    <span id="status-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></span>
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}{% endblock %}
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
