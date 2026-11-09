@@ -24,6 +24,7 @@ services:
       WEBUI_SERVICE_NAME: media-isponsorblocktv
     volumes:
       - /opt/stacks/media/isponsorblocktv:/data
+      - /opt/stacks/docker-config/beelink/media/webui-base.html:/usr/local/lib/python3.12/site-packages/app/templates/base.html:ro
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
