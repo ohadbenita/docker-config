@@ -49,15 +49,28 @@ services:
       - 8.8.8.8
 
   wud:
-    image: getwud/wud:latest
+    image: getwud/wud:9.8.0
     container_name: admin-wud
     restart: unless-stopped
     labels:
       - "wud.watch=true"
+      - "wud.trigger.dockercompose.admin.enabled=true"
     environment:
       - TZ=Asia/Jerusalem
       - WUD_WATCHER_LOCAL_SOCKET=/var/run/docker.sock
       - WUD_WATCHER_LOCAL_CRON=0 4 * * *
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_FILE=/compose/media-compose.yaml
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_INCLUDEBYDEFAULT=false
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_ROLLBACK=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_ROLLBACKGRACE=60000
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_AUTO=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_INCLUDEBYDEFAULT=false
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_FILE=/compose/admin-compose.yaml
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_BACKUP=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATE=true
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATETIMEOUT=120000
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_AUTO=false
       - WUD_WATCHER_LOCAL_WATCHBYDEFAULT=false
       - WUD_AUTH_ADMIN_USER=${WUD_AUTH_ADMIN_USER}
       - WUD_AUTH_ADMIN_PASSWORD=${WUD_AUTH_ADMIN_PASSWORD}
@@ -66,9 +79,12 @@ services:
       - WUD_TRIGGER_TELEGRAM_INFRA_MODE=batch
       - WUD_TRIGGER_TELEGRAM_INFRA_ONCE=true
       - WUD_TRIGGER_TELEGRAM_INFRA_MESSAGEFORMAT=HTML
+      - WUD_TRIGGER_TELEGRAM_INFRA_EVENTS=available,pre,success,failure,rollback
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/admin/wud:/store
+      - /opt/stacks/media/compose.yaml:/compose/media-compose.yaml
+      - /opt/stacks/admin/compose.yaml:/compose/admin-compose.yaml
     ports:
       - "3000:3000"
     networks:
