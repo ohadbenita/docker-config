@@ -1,6 +1,6 @@
 # Media image updates
 
-The Beelink media images are checked by WUD at 04:00 Asia/Jerusalem. A per-minute cron guard invokes the WUD media-only Compose trigger at 04:15 Asia/Jerusalem, after the scan completes. It selects only update candidates from the media Compose project.
+The Beelink media images are checked by WUD at 09:45 Asia/Jerusalem. A per-minute cron guard invokes the WUD media-only Compose trigger at 10:00 Asia/Jerusalem, after the scan completes. It selects only update candidates from the media Compose project.
 
 Monitor the WUD dashboard at http://192.168.1.167:3000 and the run log at /opt/stacks/admin/media-auto-update.log. The active and tracked Compose image references are kept in sync after each update.
 

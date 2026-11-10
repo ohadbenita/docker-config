@@ -33,7 +33,7 @@ The iSponsorBlockTV Web UI has a separate credentials file at `/opt/stacks/media
 
 ## Image updates
 
-WUD checks Beelink media images at 04:00 Asia/Jerusalem. The media-only updater runs at 04:15, after the scan. WUD can update itself. Media updates use a 60-second running grace period and support rollback of the last run. See [media update notes](./beelink/admin/MEDIA-AUTO-UPDATE.md) for monitoring and rollback steps.
+WUD checks Beelink media images at 09:45 Asia/Jerusalem. The media-only updater runs at 10:00, after the scan. WUD can update itself. Media updates use a 60-second running grace period and support rollback of the last run. See [media update notes](./beelink/admin/MEDIA-AUTO-UPDATE.md) for monitoring and rollback steps.
 
 ## Validation
 
