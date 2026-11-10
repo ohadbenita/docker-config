@@ -60,13 +60,13 @@ services:
       - WUD_WATCHER_LOCAL_SOCKET=/var/run/docker.sock
       - WUD_WATCHER_LOCAL_CRON=45 9 * * *
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_BACKUP=true
-      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_FILE=/compose/media-compose.yaml
+      - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_FILE=/compose/media/compose.yaml
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_INCLUDEBYDEFAULT=false
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_ROLLBACK=true
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_ROLLBACKGRACE=60000
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_AUTO=true
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_INCLUDEBYDEFAULT=false
-      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_FILE=/compose/admin-compose.yaml
+      - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_FILE=/compose/admin/compose.yaml
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_BACKUP=true
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATE=true
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATETIMEOUT=120000
@@ -83,8 +83,8 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/admin/wud:/store
-      - /opt/stacks/media/compose.yaml:/compose/media-compose.yaml
-      - /opt/stacks/admin/compose.yaml:/compose/admin-compose.yaml
+      - /opt/stacks/media:/compose/media
+      - /opt/stacks/admin:/compose/admin
     ports:
       - "3000:3000"
     networks:
