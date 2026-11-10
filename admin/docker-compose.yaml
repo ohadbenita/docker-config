@@ -30,7 +30,6 @@ services:
       - 8.8.8.8
       - 4.4.4.4
       - 1.1.1.1
-    labels:
 
   prune:
     container_name: admin-prune-cleanup
@@ -41,7 +40,6 @@ services:
       - SLEEP=10800
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
 
   # auto-updater:
   #   image: pyouroboros/ouroboros:latest

@@ -1,0 +1,56 @@
+name: Docker config validation
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    name: Validate Docker Compose files
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Create placeholder env file
+        run: |
+          sudo mkdir -p /opt/stacks/media/isponsorblocktv
+          sudo touch /opt/stacks/media/isponsorblocktv/webui.env
+
+      - name: Validate tracked Compose files
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import subprocess
+
+          paths = subprocess.check_output(["git", "ls-files", "-z"], text=False).decode().split("\0")
+          compose_names = {"docker-compose.yaml", "docker-compose.yml", "compose.yaml", "compose.yml"}
+          files = sorted(path for path in paths if path and path.rsplit("/", 1)[-1] in compose_names)
+          if not files:
+              raise SystemExit("No tracked Compose files found")
+
+          env = os.environ.copy()
+          env["VIDEO_GID"] = "1000"
+          env["RENDER_GID"] = "1001"
+          for path in files:
+              with open(path, encoding="utf-8") as source:
+                  for name in re.findall(r"\$\{([A-Za-z_][A-Za-z0-9_]*)", source.read()):
+                      env[name] = "1000" if name == "VIDEO_GID" else "1001" if name == "RENDER_GID" else "ci"
+
+          for path in files:
+              print(f"Validating {path}", flush=True)
+              subprocess.run(
+                  ["docker", "compose", "-f", path, "config", "--quiet"],
+                  check=True,
+                  env=env,
+              )
+          PY

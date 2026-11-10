@@ -1,72 +1,40 @@
-# Overview
+# Docker configuration
 
-- My infrastructure as code using [Docker](https://www.docker.com/) containers &amp; [docker-compose](https://docs.docker.com/compose/).
-- This repository's goal is to provide assistance and guidance into the configuration of different services around home automation using compose.
+This repository stores Docker Compose files for two hosts:
 
-## Configuration Sections
+- The root stack folders are for the Synology host.
+- The `beelink/` folder has separate Compose files for the Beelink host.
 
-### Admin
+The hosts have different image versions, paths, ports, and runtime data. Keep each host's configuration in its own files.
 
-Here you can find services I use mainly for administering my infrastructure:
+## Stacks
 
-1. [Cloud9](https://github.com/c9) - A compact web-based IDE I use daily to edit my different code and configurations.
-1. [Prune](https://github.com/liske/docker-prune) - A container used to do dome maintenance around docker objects such as images, unused volumes, etc.
-1. [Ouroboros](https://github.com/pyouroboros/ouroboros) - Auto-updater for docker containers.
-1. [Portainer](https://www.portainer.io/) - Simple yet powerful web-based container manager.
+- **Admin (Synology):** code-server and prune.
+- **Admin (Beelink):** Portainer Agent, code-server, WUD, Uptime Kuma, Homepage, and OpenSpeedTest.
+- **Home Assistant (Synology):** Home Assistant, MariaDB, Mosquitto, Tasmoadmin, Zigbee2MQTT, Matter Server, and the GenAI server.
+- **Media (Synology):** Sonarr, Radarr, Bazarr, Jackett, Prowlarr, Jellyseerr, and Minecraft.
+- **Media (Beelink):** Jellyfin, Transmission, Radarr, Sonarr, Bazarr, Prowlarr, Jellyseerr, iSponsorBlockTV and its Web UI, torrentleech-rss, and media-health.
+- **Network (Synology):** Cloudflare Tunnel and its replica.
+- **Nextcloud (Synology):** the Nextcloud app and database.
+- **Traccar (Synology):** the Traccar app and database.
 
-### Hass
+The Beelink Compose files and environment examples are in [beelink/](./beelink/). Deployment steps are in [docs/beelink.md](./docs/beelink.md). See the host-specific guides for [admin](./docs/admin.md), [Home Assistant](./docs/hass.md), [media](./docs/media.md), [network](./docs/network.md), [Nextcloud](./docs/nextcloud.md), and [Traccar](./docs/traccar.md).
 
-Services used for my [HomeAssistant](https://www.home-assistant.io/), my home automation hub of choice.
+## Runtime values
 
-1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for home assistant's data.
-1. [Mosquitto](https://mosquitto.org/) - An open source MQTT broker used as a pub-sub server for many of my devices.
-1. [HomeAssistant](https://www.home-assistant.io/) - An open source home automation hub.
-1. [MotionEye](https://github.com/ccrisan/motioneye) - A service to gather and control cctv cameras.
+Keep real environment files on their hosts. Do not commit them. Use the checked-in `.env.example` files to see which variables each Beelink stack needs.
 
-### Media
+Beelink's active environment files are:
 
-All media-related services used to manage my media library.
+- `/opt/stacks/admin/.env`
+- `/opt/stacks/media/.env`
 
-1. [SickChill](https://github.com/SickChill/SickChill) - Used to automatically download torrents and their metadata.
-1. [Transmission](https://transmissionbt.com/) - A simple bittorrent client.
+The iSponsorBlockTV Web UI has a separate credentials file at `/opt/stacks/media/isponsorblocktv/webui.env`.
 
-### Network
+## Image updates
 
-All services related to external access to the different services I run are listed here.
+WUD checks Beelink media images at 04:00 Asia/Jerusalem. The media-only updater runs at 04:15, after the scan. WUD can update itself. Media updates use a 60-second running grace period and support rollback of the last run. See [media update notes](./beelink/admin/MEDIA-AUTO-UPDATE.md) for monitoring and rollback steps.
 
-1. [NGINX](https://hub.docker.com/r/linuxserver/letsencrypt) - A powerful reverse proxy for securely exposing public services. This container also takes care of the renewal of the DuckDNS SSL certificate.
-1. [DuckDNS](https://www.duckdns.org/) - A free dynamic DNS hosted on AWS. Used to update my public IP address with my registered domain.
+## Validation
 
-### NextCloud
-
-A dropbox-like service used to synchronize local files with mobile devices.
-
-1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for NextCloud's data.
-1. [NextCloud](https://nextcloud.com/) - A file-synchronization and collaboration service.
-
-### Traccar
-
-A service used to report location data locally without hosting it on any external service.
-
-1. [MariaDB](https://mariadb.org/) - An open source relational database, used as the data store for Traccar's data.
-1. [Traccar](https://www.traccar.org/) - Traccar is the leading GPS tracking software. Vehicle and personal tracking. Self hosting and cloud-based solution. Real time view, reports, notifications.
-
-## Getting Started
-
-- In my setup, the configuration of all services reside under `/volume1/Media/Config/name_of_service`. This gives the advantage of keeping all configuration related to my docker infrastructure organized in one place which is easy to maintain and take backups.
-- To try out one of the services:
-  - Create `docker-compose.yaml` and copy the relevant service's configuration.
-  - Wherever I refer to ${ENV_VAR} - create an [`.env`](https://docs.docker.com/compose/environment-variables/) file in the same folder as your `docker-compose.yaml` with your own values for the environment variables.
-- Each of the services' configuration will be documented under their relevant sections:
-  - [Administration](./docs/admin.md)
-  - [Home Assistant](./docs/hass.md)
-  - [Media](./docs/media.md)
-  - [Network](./docs/network.md)
-  - [NextCloud](./docs/nextcloud.md)
-  - [Traccar](./docs/traccar.md)
-
-## Container configuration by host
-
-This repository is the shared Git source for container configuration on both machines. The existing root stack folders remain in place for Synology. Beelink uses separate files under `beelink/` because its Compose definitions and host paths differ.
-
-See [Beelink deployment notes](./docs/beelink.md). Keep real `.env` files on their hosts; the repository ignores them.
+The [Docker config validation workflow](./.github/workflows/docker-config-validation.yml) runs `docker compose config --quiet` for every tracked Compose file on pull requests and pushes to `master`. It uses placeholder environment values and does not need host credentials.
