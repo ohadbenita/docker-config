@@ -6,6 +6,11 @@ services:
     network_mode: host
     volumes:
       - /opt/stacks/media/isponsorblocktv:/app/data
+    labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.watch=true"
+      - "wud.trigger.dockercompose.media.enabled=true"
+
 
   isponsorblocktv-webui:
     image: ghcr.io/toddwchapin/isponsorblocktv-webui:0.3.0
@@ -25,6 +30,11 @@ services:
     volumes:
       - /opt/stacks/media/isponsorblocktv:/data
       - /opt/stacks/docker-config/beelink/media/webui-base.html:/usr/local/lib/python3.12/site-packages/app/templates/base.html:ro
+    labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.watch=true"
+      - "wud.trigger.dockercompose.media.enabled=true"
+
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
@@ -60,6 +70,8 @@ services:
       - 8.8.8.8
 
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
       - 'wud.tag.include=^12\.0ubu2604-ls\d+$$'
 
@@ -78,6 +90,8 @@ services:
       - /mnt/synology/jellyfin/downloads/watch:/watch
       - /etc/localtime:/etc/localtime:ro
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
       - 'wud.tag.include=^4\.\d+\.\d+$$'
 
@@ -100,6 +114,8 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
 
   
@@ -121,6 +137,8 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
 
 
@@ -142,6 +160,8 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
 
 
@@ -161,6 +181,8 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
 
 
@@ -179,6 +201,9 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.watch.digest=true"
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
 
 
@@ -196,6 +221,9 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
+      - "wud.watch.digest=true"
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
       - 'wud.tag.include=^3\.13-alpine$$'
 
@@ -218,5 +246,8 @@ services:
       - PORTAINER_API_KEY=ptr_+MhhEDk0S8VFAA6JrnrnLlwmna1v9GzpJ+iH28MMGr0=
       - SYNOLOGY_CONTAINERS=admin-portainer:admin-prune-cleanup:code-server:hass-gen-ai-server:hass-homeassistant:hass-mariadb:hass-matter-server:hass-mosquitto:hass-tasmoadmin:hass-zigbee2mqtt-main-floor:hass-zigbee2mqtt-upper-floor:network-cloudflare-tunnel-hass:telegram-relay
     labels:
+      - "wud.watch.digest=true"
+      - "wud.trigger.include=dockercompose.media,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
       - 'wud.tag.include=^3\.13-alpine$$'

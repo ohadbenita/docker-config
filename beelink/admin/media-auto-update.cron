@@ -1,0 +1,1 @@
+* * * * * /usr/bin/python3 /opt/stacks/admin/media-update.py --schedule-check >> /opt/stacks/admin/media-auto-update.log 2>&1
