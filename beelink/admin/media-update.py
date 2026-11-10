@@ -168,7 +168,7 @@ def rollback():
 
 def scheduled_check():
     now = datetime.now(ZoneInfo("Asia/Jerusalem"))
-    if not (now.hour == 4 and 15 <= now.minute < 30):
+    if not (now.hour == 10 and 0 <= now.minute < 15):
         return
     STATE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
     with LOCK_FILE.open("a") as lock:

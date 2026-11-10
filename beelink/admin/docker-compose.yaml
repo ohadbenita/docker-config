@@ -58,7 +58,7 @@ services:
     environment:
       - TZ=Asia/Jerusalem
       - WUD_WATCHER_LOCAL_SOCKET=/var/run/docker.sock
-      - WUD_WATCHER_LOCAL_CRON=0 4 * * *
+      - WUD_WATCHER_LOCAL_CRON=45 9 * * *
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_BACKUP=true
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_FILE=/compose/media-compose.yaml
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_INCLUDEBYDEFAULT=false
