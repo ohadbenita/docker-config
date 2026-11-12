@@ -48,7 +48,7 @@ services:
   homeassistant:
     container_name: hass-homeassistant
     restart: always
-    image: homeassistant/home-assistant:2026.10.2
+    image: homeassistant/home-assistant:2026.11.1
     depends_on:
       - "mariadb"
       - "mosquitto"
