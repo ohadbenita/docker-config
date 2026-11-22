@@ -22,7 +22,8 @@ Git contains the reusable Compose definitions, environment examples, this guide,
 
 - Beelink cron runs the backup daily at **19:15 Beelink host time**, which is **02:15 in Israel** when the time difference is seven hours. The job runs before Hyper Backup even when daylight-saving changes shift the offset.
 - Synology Hyper Backup runs daily at **05:30 Synology time**. The latest Jellyfin mirror at that point may be from the previous night.
-- Uptime Kuma’s **Beelink Config Backup to Synology** monitor reports a success after the NAS copy passes checksum verification. Kuma sends a Telegram alert on failure or if the heartbeat is more than 26 hours old. Check the Hyper Backup task separately for S3 status.
+- Uptime Kuma’s **Beelink Config Backup to Synology** monitor reports a success after the NAS copy passes checksum verification. Kuma sends a Telegram alert on failure or if the heartbeat is more than 26 hours old.
+- Uptime Kuma’s **Beelink Config Backup to S3** monitor checks hourly for the newest completed Hyper Backup version record in S3. Kuma sends a Telegram alert if the version is more than 28 hours old, the S3 check fails, or the heartbeat stops for two hours. Use Hyper Backup’s Backup Explorer for a restore test.
 
 ## Recover a snapshot
 
@@ -49,3 +50,11 @@ Run on Beelink as the account that owns the backup job:
 ```
 
 The cron log is `/opt/stacks/admin/config-backup/backup.log`. The Kuma push URL is in the private `~/.config/beelink-config-backup/push-url` file. To send a snapshot to S3 immediately, run **Back Up Now** on the **Beelink config to S3** task after confirming the NAS copy is present.
+
+Run the S3 check on demand with:
+
+```sh
+/usr/bin/timeout 60s /usr/bin/python3 /opt/stacks/admin/config-backup/backup-configs.py --check-s3
+```
+
+The S3 check log is `/opt/stacks/admin/config-backup/s3-check.log`. Its private files are `~/.config/beelink-config-backup/s3-list.curl` and `~/.config/beelink-config-backup/s3-push-url`. When rotating the `beelink-s3-backup-monitor` AWS credential, allow only `s3:ListBucket` for the exact Hyper Backup completion prefix used by the script. Verify a successful heartbeat before retiring the previous key.
