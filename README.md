@@ -31,6 +31,10 @@ Beelink's active environment files are:
 
 The iSponsorBlockTV Web UI has a separate credentials file at `/opt/stacks/media/isponsorblocktv/webui.env`.
 
+## Backup and recovery
+
+The [Beelink backup and recovery README](./beelink/admin/config-backup/README.md) lists the live configuration, the Synology and S3 copies, and the steps to recover them.
+
 ## Image updates
 
 WUD checks Beelink media images at 09:45 Asia/Jerusalem. The media-only updater runs at 10:00, after the scan. WUD can update itself. Media updates use a 60-second running grace period and support rollback of the last run. See [media update notes](./beelink/admin/MEDIA-AUTO-UPDATE.md) for monitoring and rollback steps.

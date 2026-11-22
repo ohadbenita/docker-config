@@ -1,4 +1,6 @@
-# Beelink configuration backups
+# Beelink backup and recovery
+
+If Beelink is down, start with the latest encrypted snapshot on the Synology. If the Synology is also unavailable, use the existing S3 Hyper Backup repository. Get the recovery key from the Mac or your offline copy before you restore.
 
 ## Where things are stored
 
@@ -14,7 +16,7 @@
 
 The encrypted snapshots are in `/volume1/jellyfin/config/beelink-backups` on the Synology, mounted at `/mnt/synology/jellyfin/config/beelink-backups` on Beelink. Names end in `.tar.gz.gpg` and use a UTC timestamp. The snapshot job keeps each successful run. Synology Hyper Backup sends the `jellyfin/config` subtree to the existing **Beelink config to S3** task. Use that task’s Backup Explorer to retrieve an off-site version.
 
-Git contains the reusable Compose definitions, environment examples, this guide, and the [backup script](../beelink/admin/backup-configs.py). Live `.env` files, application databases, credentials, and the recovery key belong in private storage. Video files and Transmission download state are outside this configuration backup.
+Git contains the reusable Compose definitions, environment examples, this guide, and the [backup script](backup-configs.py). Live `.env` files, application databases, credentials, and the recovery key belong in private storage. Video files and Transmission download state are outside this configuration backup.
 
 ## Schedule and alerts
 
@@ -24,7 +26,7 @@ Git contains the reusable Compose definitions, environment examples, this guide,
 
 ## Recover a snapshot
 
-1. Copy the desired encrypted archive from the Synology or restore it through Hyper Backup’s Backup Explorer.
+1. Copy the desired encrypted archive from the Synology. For the off-site copy, open **Hyper Backup → Beelink config to S3 → Backup Explorer**, select a restore point, then open **jellyfin / config / beelink-backups**. If the original NAS is unavailable, connect Hyper Backup on a replacement Synology to the existing Amazon S3 repository under the `beelink-config` directory.
 2. Use the recovery key in `~/.config/beelink-config-backup/recovery.key`. There are copies on Beelink and the Mac used to set up the job. Keep an offline copy with your other recovery credentials.
 3. Decrypt to a private staging directory on a machine with GnuPG. List the archive before extracting it.
 
