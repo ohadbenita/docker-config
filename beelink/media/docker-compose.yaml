@@ -37,7 +37,7 @@ services:
 
 
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:12.0ubu2604-ls48
+    image: lscr.io/linuxserver/jellyfin:12.4ubu2604-ls60
     container_name: media-jellyfin
     restart: unless-stopped
 
@@ -73,7 +73,7 @@ services:
       - "wud.trigger.include=dockercompose.media,telegram.infra"
       - "wud.trigger.dockercompose.media.enabled=true"
       - "wud.watch=true"
-      - 'wud.tag.include=^12\.0ubu2604-ls\d+$$'
+      - 'wud.tag.include=^12\.4ubu2604-ls\d+$$'
 
   transmission:
     image: lscr.io/linuxserver/transmission:4.1.4
