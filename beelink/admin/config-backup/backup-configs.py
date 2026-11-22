@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import fcntl
 import hashlib
 import os
@@ -6,8 +7,9 @@ import shutil
 import sqlite3
 import subprocess
 import tarfile
+import xml.etree.ElementTree as ET
 from contextlib import closing
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from urllib.parse import urlencode, urlsplit, urlunsplit
@@ -17,6 +19,8 @@ from urllib.request import urlopen
 SETTINGS = Path.home() / '.config/beelink-config-backup'
 NAS_CONFIG = Path('/mnt/synology/jellyfin/config')
 DESTINATION = NAS_CONFIG / 'beelink-backups'
+S3_COMPLETION_PREFIX = 'beelink-config.hbk/Config/@Share/@AppConfig/complete_list.db.'
+S3_MAX_AGE = timedelta(hours=28)
 DATABASES = (
     Path('/opt/admin/uptime-kuma/kuma.db'),
     Path('/opt/media/sonarr/config/sonarr.db'),
@@ -106,8 +110,8 @@ def backup():
     return archive_name
 
 
-def heartbeat(status, message):
-    target = SETTINGS / 'push-url'
+def heartbeat(status, message, target_name='push-url'):
+    target = SETTINGS / target_name
     if not target.exists():
         return
     url = urlsplit(target.read_text().strip())
@@ -117,8 +121,51 @@ def heartbeat(status, message):
             raise RuntimeError('Kuma heartbeat failed')
 
 
+def s3_freshness(payload, now):
+    listing = ET.fromstring(payload)
+    if listing.findtext('{*}IsTruncated') != 'false':
+        raise RuntimeError('Incomplete S3 completion listing')
+    versions = []
+    for entry in listing.findall('{*}Contents'):
+        key = entry.findtext('{*}Key', default='')
+        version = key.removeprefix(S3_COMPLETION_PREFIX)
+        if key.startswith(S3_COMPLETION_PREFIX) and version.isdecimal():
+            modified = datetime.fromisoformat(entry.findtext('{*}LastModified', default=''))
+            versions.append((modified, version))
+    if not versions:
+        return 'down', 'No completed Hyper Backup version found in S3'
+
+    modified, version = max(versions)
+    age = now - modified
+    if age < timedelta(0) or age > S3_MAX_AGE:
+        return 'down', f'S3 version {version} is outside the 28-hour freshness window'
+    return 'up', f'S3 version {version} completed at {modified:%Y-%m-%d %H:%M UTC}'
+
+
+def check_s3():
+    try:
+        listing = subprocess.run(
+            ['curl', '--disable', '--config', str(SETTINGS / 's3-list.curl'),
+             '--fail', '--silent', '--show-error', '--max-time', '15',
+             '--retry', '2', '--retry-max-time', '30', '--get',
+             '--data-urlencode', 'list-type=2', '--data-urlencode',
+             f'prefix={S3_COMPLETION_PREFIX}'],
+            check=True, stdout=subprocess.PIPE,
+        ).stdout
+        status, message = s3_freshness(listing, datetime.now(timezone.utc))
+    except (subprocess.CalledProcessError, ValueError, RuntimeError, ET.ParseError):
+        status, message = 'down', 'Could not verify the S3 Hyper Backup completion record'
+    heartbeat(status, message, 's3-push-url')
+    print(message, flush=True)
+    return status == 'up'
+
+
 if __name__ == '__main__':
     os.umask(0o077)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--check-s3', action='store_true')
+    if parser.parse_args().check_s3:
+        raise SystemExit(0 if check_s3() else 1)
     with (SETTINGS / 'run.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         try:
