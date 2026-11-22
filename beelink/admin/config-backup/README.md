@@ -1,6 +1,6 @@
 # Beelink backup and recovery
 
-If Beelink is down, start with the latest encrypted snapshot on the Synology. If the Synology is also unavailable, use the existing S3 Hyper Backup repository. Get the recovery key from the Mac or your offline copy before you restore.
+If Beelink is down, start with the latest encrypted snapshot on the Synology. If the Synology is also unavailable, use the existing S3 Hyper Backup repository. Get the [Beelink Backup Recovery Key](https://start.1password.com/open/i?a=ATF4FB73IJEBLO6AJQYPAXXZQ4&h=lightricks.1password.com&i=itpslnwnpmwbyxwczuwhqqef2q&v=tqvf63zfjfcnnxnj6sm4izmjuy) from 1Password before you restore.
 
 ## Where things are stored
 
@@ -27,7 +27,7 @@ Git contains the reusable Compose definitions, environment examples, this guide,
 ## Recover a snapshot
 
 1. Copy the desired encrypted archive from the Synology. For the off-site copy, open **Hyper Backup → Beelink config to S3 → Backup Explorer**, select a restore point, then open **jellyfin / config / beelink-backups**. If the original NAS is unavailable, connect Hyper Backup on a replacement Synology to the existing Amazon S3 repository under the `beelink-config` directory.
-2. Use the recovery key in `~/.config/beelink-config-backup/recovery.key`. There are copies on Beelink and the Mac used to set up the job. Keep an offline copy with your other recovery credentials.
+2. Open the 1Password item linked above, then use the **Recovery key** field. The item is in the Lightricks **Employee** vault and requires vault access. There are also file copies at `~/.config/beelink-config-backup/recovery.key` on Beelink and the Mac used to set up the job. Keep an offline copy with your other recovery credentials.
 3. Decrypt to a private staging directory on a machine with GnuPG. List the archive before extracting it.
 
    ```sh
