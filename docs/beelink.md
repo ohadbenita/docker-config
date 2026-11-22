@@ -26,3 +26,5 @@ docker compose -f /opt/docker-config/beelink/media/docker-compose.yaml --env-fil
 ```
 
 The Compose files use absolute Beelink paths. Keep application data under the existing host directories; do not move it when updating the repository.
+
+See [Beelink configuration backups](beelink-config-backups.md) for storage locations, schedules, monitoring, and recovery.

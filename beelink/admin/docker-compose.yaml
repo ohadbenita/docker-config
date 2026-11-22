@@ -49,7 +49,7 @@ services:
       - 8.8.8.8
 
   wud:
-    image: getwud/wud:9.8.0
+    image: getwud/wud:9.9.0
     container_name: admin-wud
     restart: unless-stopped
     labels:
@@ -71,6 +71,10 @@ services:
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATE=true
       - WUD_TRIGGER_DOCKERCOMPOSE_ADMIN_SELFUPDATETIMEOUT=120000
       - WUD_TRIGGER_DOCKERCOMPOSE_MEDIA_AUTO=false
+      - WUD_TRIGGER_DOCKER_LOCAL_AUTO=true
+      - WUD_TRIGGER_DOCKER_LOCAL_INCLUDEBYDEFAULT=false
+      - WUD_TRIGGER_DOCKER_LOCAL_ROLLBACK=true
+      - WUD_TRIGGER_DOCKER_LOCAL_ROLLBACKGRACE=60000
       - WUD_WATCHER_LOCAL_WATCHBYDEFAULT=false
       - WUD_AUTH_ADMIN_USER=${WUD_AUTH_ADMIN_USER}
       - WUD_AUTH_ADMIN_PASSWORD=${WUD_AUTH_ADMIN_PASSWORD}

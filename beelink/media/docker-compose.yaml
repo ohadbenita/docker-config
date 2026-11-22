@@ -160,8 +160,9 @@ services:
       - 1.1.1.1
       - 8.8.8.8
     labels:
-      - "wud.trigger.include=dockercompose.media,telegram.infra"
-      - "wud.trigger.dockercompose.media.enabled=true"
+      - "wud.trigger.include=docker.local,telegram.infra"
+      - "wud.trigger.dockercompose.media.enabled=false"
+      - "wud.rollback.enable=true"
       - "wud.watch=true"
 
 
