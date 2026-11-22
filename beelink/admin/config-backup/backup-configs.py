@@ -2,25 +2,31 @@
 import argparse
 import fcntl
 import hashlib
+import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
 import tarfile
 import xml.etree.ElementTree as ET
 from contextlib import closing
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from urllib.parse import quote, urlencode, urlsplit, urlunsplit
 from urllib.request import urlopen
+from zoneinfo import ZoneInfo
 
 
 SETTINGS = Path.home() / '.config/beelink-config-backup'
 NAS_CONFIG = Path('/mnt/synology/jellyfin/config')
 DESTINATION = NAS_CONFIG / 'beelink-backups'
 S3_COMPLETION_PREFIX = 'beelink-config.hbk/Config/@Share/@AppConfig/complete_list.db.'
+S3_CATALOG_PREFIX = 'beelink-config.hbk/Config/@Share/jellyfin/'
 S3_MAX_AGE = timedelta(hours=28)
+SNAPSHOT_NAME = re.compile(r'beelink-config-\d{8}T\d{6}Z\.tar\.gz\.gpg')
+BACKUP_TIMEZONE = ZoneInfo('Asia/Jerusalem')
 DATABASES = (
     Path('/opt/admin/uptime-kuma/kuma.db'),
     Path('/opt/media/sonarr/config/sonarr.db'),
@@ -121,7 +127,7 @@ def heartbeat(status, message, target_name='push-url'):
             raise RuntimeError('Kuma heartbeat failed')
 
 
-def s3_freshness(payload, now):
+def latest_s3_completion(payload):
     listing = ET.fromstring(payload)
     if listing.findtext('{*}IsTruncated') != 'false':
         raise RuntimeError('Incomplete S3 completion listing')
@@ -131,30 +137,99 @@ def s3_freshness(payload, now):
         version = key.removeprefix(S3_COMPLETION_PREFIX)
         if key.startswith(S3_COMPLETION_PREFIX) and version.isdecimal():
             modified = datetime.fromisoformat(entry.findtext('{*}LastModified', default=''))
+            if modified.tzinfo is None:
+                raise ValueError('S3 completion time has no timezone')
             versions.append((modified, version))
     if not versions:
-        return 'down', 'No completed Hyper Backup version found in S3'
+        raise RuntimeError('No completed Hyper Backup version found in S3')
+    return max(versions)
 
-    modified, version = max(versions)
-    age = now - modified
-    if age < timedelta(0) or age > S3_MAX_AGE:
-        return 'down', f'S3 version {version} is outside the 28-hour freshness window'
-    return 'up', f'S3 version {version} completed at {modified:%Y-%m-%d %H:%M UTC}'
+
+def request_s3(key='', query=None, output=None):
+    endpoint = (SETTINGS / 's3-endpoint').read_text().strip()
+    url = endpoint + quote(key, safe='/')
+    if query:
+        url += '?' + urlencode(query)
+    command = ['curl', '--disable', '--config', str(SETTINGS / 's3-list.curl'),
+               '--fail', '--silent', '--show-error', '--connect-timeout', '10',
+               '--max-time', '180' if output else '20', '--url', url]
+    if output:
+        command.extend(['--retry', '1', '--output', str(output)])
+    return subprocess.run(command, check=True, stdout=subprocess.PIPE).stdout
+
+
+def catalog_entries(path):
+    # Hyper Backup's internal catalog format can change. A schema mismatch fails the check.
+    with closing(sqlite3.connect(path.as_uri() + '?mode=ro&immutable=1', uri=True)) as catalog:
+        catalog.execute('PRAGMA trusted_schema=OFF')
+        rows = catalog.execute("""
+            SELECT entry.file_name, entry.size, entry.mtime_sec, entry.mtime_nsec
+            FROM version_list AS entry
+            JOIN version_list AS parent ON parent.name_id_v2 = entry.pname_id_v2
+            JOIN version_list AS grandparent ON grandparent.name_id_v2 = parent.pname_id_v2
+            WHERE parent.file_name = 'beelink-backups' AND grandparent.file_name = 'config'
+              AND (entry.mode & 61440) = 32768 AND entry.off_virtual_file > 0
+              AND entry.status IN ('C', 'M', 'N', 'U')
+        """)
+        return {name: [size, sec * 1_000_000_000 + nsec] for name, size, sec, nsec in rows
+                if SNAPSHOT_NAME.fullmatch(name)}
+
+
+def s3_entries(version, completed):
+    cache = SETTINGS / 's3-catalog.json'
+    identity = [version, completed.isoformat()]
+    if cache.exists():
+        saved = json.loads(cache.read_text())
+        if saved['identity'] == identity:
+            return saved['entries']
+
+    with TemporaryDirectory(dir=SETTINGS) as scratch:
+        catalog = Path(scratch) / 'catalog.db'
+        request_s3(f'{S3_CATALOG_PREFIX}{version}.db.{version}', output=catalog)
+        entries = catalog_entries(catalog)
+        pending = Path(scratch) / 'catalog.json'
+        pending.write_text(json.dumps({'identity': identity, 'entries': entries}))
+        pending.replace(cache)
+    return entries
+
+
+def snapshot_state(snapshots, entries, version, now):
+    if not snapshots:
+        return 'down', 'No published Synology snapshot found'
+
+    filename, stat = max(snapshots.items())
+    if entries.get(filename) == stat:
+        return 'up', f'{filename} verified in S3 version {version}'
+    if filename in entries:
+        return 'down', f'{filename} metadata differs in S3 version {version}'
+
+    created = datetime.fromtimestamp(stat[1] // 1_000_000_000, BACKUP_TIMEZONE)
+    next_run = datetime.combine(created.date(), time(5, 30), tzinfo=BACKUP_TIMEZONE)
+    if created >= next_run:
+        next_run += timedelta(days=1)
+    deadline = next_run + timedelta(minutes=90)
+    if now < deadline and any(entries.get(name) == metadata for name, metadata in snapshots.items()):
+        return 'up', f'{filename} pending scheduled S3 upload by {deadline:%Y-%m-%d %H:%M %Z}'
+    return 'down', f'{filename} is missing from S3 version {version}'
 
 
 def check_s3():
     try:
-        listing = subprocess.run(
-            ['curl', '--disable', '--config', str(SETTINGS / 's3-list.curl'),
-             '--fail', '--silent', '--show-error', '--max-time', '15',
-             '--retry', '2', '--retry-max-time', '30', '--get',
-             '--data-urlencode', 'list-type=2', '--data-urlencode',
-             f'prefix={S3_COMPLETION_PREFIX}'],
-            check=True, stdout=subprocess.PIPE,
-        ).stdout
-        status, message = s3_freshness(listing, datetime.now(timezone.utc))
-    except (subprocess.CalledProcessError, ValueError, RuntimeError, ET.ParseError):
-        status, message = 'down', 'Could not verify the S3 Hyper Backup completion record'
+        listing = request_s3(query={'list-type': '2', 'prefix': S3_COMPLETION_PREFIX})
+        completed, version = latest_s3_completion(listing)
+        now = datetime.now(timezone.utc)
+        if not timedelta(0) <= now - completed <= S3_MAX_AGE:
+            raise RuntimeError(f'S3 version {version} is outside the 28-hour freshness window')
+        snapshots = {}
+        for path in DESTINATION.glob('beelink-config-*.tar.gz.gpg'):
+            if SNAPSHOT_NAME.fullmatch(path.name) and path.is_file():
+                stat = path.stat()
+                snapshots[path.name] = [stat.st_size, stat.st_mtime_ns]
+        status, message = snapshot_state(snapshots, s3_entries(version, completed), version, now)
+    except RuntimeError as error:
+        status, message = 'down', str(error)
+    except (OSError, subprocess.CalledProcessError, ValueError, KeyError, sqlite3.Error, ET.ParseError):
+        status, message = 'down', 'Could not read the Synology snapshot or S3 Hyper Backup catalog'
     heartbeat(status, message, 's3-push-url')
     print(message, flush=True)
     return status == 'up'

@@ -23,7 +23,7 @@ Git contains the reusable Compose definitions, environment examples, this guide,
 - Beelink cron runs the backup daily at **19:15 Beelink host time**, which is **02:15 in Israel** when the time difference is seven hours. The job runs before Hyper Backup even when daylight-saving changes shift the offset.
 - Synology Hyper Backup runs daily at **05:30 Synology time**. The latest Jellyfin mirror at that point may be from the previous night.
 - Uptime Kuma’s **Beelink Config Backup to Synology** monitor reports a success after the NAS copy passes checksum verification. Kuma sends a Telegram alert on failure or if the heartbeat is more than 26 hours old.
-- Uptime Kuma’s **Beelink Config Backup to S3** monitor checks hourly for the newest completed Hyper Backup version record in S3. Kuma sends a Telegram alert if the version is more than 28 hours old, the S3 check fails, or the heartbeat stops for two hours. Use Hyper Backup’s Backup Explorer for a restore test.
+- Uptime Kuma’s **Beelink Config Backup to S3** monitor compares the newest Synology snapshot’s name, size, and modification time with the file catalog for the latest completed S3 version. A new snapshot can wait until 90 minutes after the next 05:30 Israel time upload if an earlier local snapshot is present in S3. Kuma sends a Telegram alert for a missing or mismatched snapshot, a completed version more than 28 hours old, a failed check, or two hours without a heartbeat. Use Backup Explorer to download and verify the archive contents.
 
 ## Recover a snapshot
 
@@ -54,7 +54,9 @@ The cron log is `/opt/stacks/admin/config-backup/backup.log`. The Kuma push URL 
 Run the S3 check on demand with:
 
 ```sh
-/usr/bin/timeout 60s /usr/bin/python3 /opt/stacks/admin/config-backup/backup-configs.py --check-s3
+/usr/bin/timeout 7m /usr/bin/python3 /opt/stacks/admin/config-backup/backup-configs.py --check-s3
 ```
 
-The S3 check log is `/opt/stacks/admin/config-backup/s3-check.log`. Its private files are `~/.config/beelink-config-backup/s3-list.curl` and `~/.config/beelink-config-backup/s3-push-url`. When rotating the `beelink-s3-backup-monitor` AWS credential, allow only `s3:ListBucket` for the exact Hyper Backup completion prefix used by the script. Verify a successful heartbeat before retiring the previous key.
+The S3 check log is `/opt/stacks/admin/config-backup/s3-check.log`. The curl credentials, S3 endpoint, Kuma push URL, and cached catalog entries live in `~/.config/beelink-config-backup`. The job caches the file catalog for the current completed version. A Hyper Backup format change that prevents catalog verification causes the monitor to fail.
+
+When rotating the `beelink-s3-backup-monitor` AWS credential, scope `s3:ListBucket` to the completion prefix and `s3:GetObject` to the jellyfin share's catalog database objects. Verify a successful heartbeat before retiring the previous key.
