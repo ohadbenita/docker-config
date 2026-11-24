@@ -4,7 +4,7 @@ The Beelink media images are checked by WUD at 09:45 Asia/Jerusalem. A per-minut
 
 Monitor the WUD dashboard at http://192.168.1.167:3000 and the run log at /opt/stacks/admin/media-auto-update.log. The active and tracked Compose image references are kept in sync after each update.
 
-WUD is pinned to 9.8.0 with Compose rollback enabled. It waits 60 seconds for each replacement container to remain running. The updater also stores each run's prior image IDs and references under /opt/stacks/admin/media-update-state as a manual fallback. To roll back the last run, run:
+WUD is pinned to 9.9.0 with Compose rollback enabled. It waits 60 seconds for each replacement container to remain running. The updater also stores each run's prior image IDs and references under /opt/stacks/admin/media-update-state as a manual fallback. To roll back the last run, run:
 
     /usr/bin/python3 /opt/stacks/admin/media-update.py --rollback
 

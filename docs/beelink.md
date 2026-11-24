@@ -14,15 +14,15 @@ Keep Beelink runtime values in `/opt/stacks/admin/.env` and `/opt/stacks/media/.
 After the Beelink files are available on the repository's default branch, create a checkout on Beelink:
 
 ```sh
-git clone https://github.com/ohadbenita/docker-config.git /opt/docker-config
+git clone https://github.com/ohadbenita/docker-config.git /opt/stacks/docker-config
 ```
 
 Pull changes before each deployment, then run the stack from the repository while keeping the real env files at their current host paths:
 
 ```sh
-git -C /opt/docker-config pull --ff-only
-docker compose -f /opt/docker-config/beelink/admin/docker-compose.yaml --env-file /opt/stacks/admin/.env up -d
-docker compose -f /opt/docker-config/beelink/media/docker-compose.yaml --env-file /opt/stacks/media/.env up -d
+git -C /opt/stacks/docker-config pull --ff-only
+docker compose -f /opt/stacks/docker-config/beelink/admin/docker-compose.yaml --env-file /opt/stacks/admin/.env up -d
+docker compose -f /opt/stacks/docker-config/beelink/media/docker-compose.yaml --env-file /opt/stacks/media/.env up -d
 ```
 
 The Compose files use absolute Beelink paths. Keep application data under the existing host directories; do not move it when updating the repository.

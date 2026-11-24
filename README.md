@@ -15,10 +15,9 @@ The hosts have different image versions, paths, ports, and runtime data. Keep ea
 - **Media (Synology):** Sonarr, Radarr, Bazarr, Jackett, Prowlarr, Jellyseerr, and Minecraft.
 - **Media (Beelink):** Jellyfin, Transmission, Radarr, Sonarr, Bazarr, Prowlarr, Jellyseerr, iSponsorBlockTV and its Web UI, torrentleech-rss, and media-health.
 - **Network (Synology):** Cloudflare Tunnel and its replica.
-- **Nextcloud (Synology):** the Nextcloud app and database.
 - **Traccar (Synology):** the Traccar app and database.
 
-The Beelink Compose files and environment examples are in [beelink/](./beelink/). Deployment steps are in [docs/beelink.md](./docs/beelink.md). See the host-specific guides for [admin](./docs/admin.md), [Home Assistant](./docs/hass.md), [media](./docs/media.md), [network](./docs/network.md), [Nextcloud](./docs/nextcloud.md), and [Traccar](./docs/traccar.md).
+The Beelink Compose files and environment examples are in [beelink/](./beelink/). Deployment steps are in [docs/beelink.md](./docs/beelink.md). See the host-specific guides for [admin](./docs/admin.md), [Home Assistant](./docs/hass.md), [media](./docs/media.md), [network](./docs/network.md), and [Traccar](./docs/traccar.md).
 
 ## Runtime values
 
@@ -33,7 +32,7 @@ The iSponsorBlockTV Web UI has a separate credentials file at `/opt/stacks/media
 
 ## Backup and recovery
 
-The [Beelink backup and recovery README](./beelink/admin/config-backup/README.md) lists the live configuration, the Synology and S3 copies, and the steps to recover them.
+See the [central backup and recovery guide](./docs/backup-and-recovery.md) for Synology Hyper Backup tasks, S3 targets, Beelink snapshots, Docker data paths, restore steps, and coverage gaps.
 
 ## Image updates
 
