@@ -142,3 +142,18 @@ Active stacks: /opt/stacks/admin/compose.yaml and /opt/stacks/media/compose.yaml
 | Portainer Agent | Docker socket, /var/lib/docker/volumes, admin network | Recreate after Docker; confirm Portainer can reach it. |
 | OpenSpeedTest | No persistent data; admin network | Recreate from admin Compose after Docker/network. |
 | Docker Engine and networks | Host OS, Compose files, private env files | Restore Docker first, then env and mounts; bring up admin before media; only start NFS-dependent containers after mount checks. |
+
+## Synology outage and full NAS recovery
+
+A failed Synology does not mean the Synology data has no offsite copy. The DSM task **Backup hass config** selects the whole Media shared folder with filters off and backs it up to the Amazon S3 bucket hass-config-backup-benita under hass-config. This includes the SmartHome/Config tree, including Home Assistant and MariaDB files. The task also backs up DSM system configuration. Client-side encryption is off, so no Hyper Backup decryption key is required. S3 credentials are still required.
+
+If DSM or the NAS is unavailable:
+
+1. Beelink containers that use the Synology NFS mount at /mnt/synology/jellyfin will lose media, downloads, and some app configuration. Stop or leave them stopped until the share is available. Jellyfin and media managers may report missing paths. Home Assistant is hosted on Synology and will be unavailable.
+2. Repair the NAS or prepare a replacement Synology. Install DSM and Hyper Backup, then connect to the existing S3 repository using the credentials in private credential storage.
+3. Restore DSM system configuration and the Media share from hass-config-backup-benita / hass-config. Restore the Docker Compose checkout and SmartHome/Config data, including MariaDB, MQTT, HA, and each other required service folder. The MariaDB backup is a live data directory, not an SQL dump. Restore it while MariaDB is stopped.
+4. Restore or verify private environment files and secrets from 1Password. Recreate Docker and Container Manager if needed. Start MariaDB and Mosquitto first, then Home Assistant and its dependent services. Start the Cloudflare tunnel after local HA works.
+5. Recreate the NFS share and mount 172.16.0.9:/volume1/jellyfin at /mnt/synology/jellyfin on Beelink. Check paths and permissions, then start Beelink media services in the order in the service table.
+6. If the Synology copy of a Beelink snapshot is also unavailable, retrieve the encrypted archive from the Beelink config to S3 task under beelink-config. Decrypt it with the Beelink GPG recovery key before restoring host config.
+
+The Beelink GPG key is needed only for the encrypted Beelink snapshots. Hyper Backup client-side decryption keys are not needed for either verified task. Protect the S3 access credentials and Beelink GPG recovery key in 1Password, and keep an independent offline recovery copy of the GPG key.
