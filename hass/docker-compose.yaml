@@ -3,6 +3,8 @@ networks:
   default:
     external:
       name: bridge
+  mqtt_internal:
+    driver: bridge
 
 services:
   mariadb:
@@ -41,7 +43,11 @@ services:
       - "1883:1883"
       - "1884:1884"
       - "9001:9001"
-    network_mode: bridge
+    networks:
+      default: {}
+      mqtt_internal:
+        aliases:
+          - hass-mosquitto
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
 
@@ -90,7 +96,10 @@ services:
       - 9999:8080
     environment:
       - TZ=Asia/Jerusalem
-    network_mode: bridge
+      - ZIGBEE2MQTT_CONFIG_MQTT_SERVER=mqtt://hass-mosquitto:1883
+    networks:
+      default: {}
+      mqtt_internal: {}
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
 
@@ -105,7 +114,10 @@ services:
       - 9998:8080
     environment:
       - TZ=Asia/Jerusalem
-    network_mode: bridge
+      - ZIGBEE2MQTT_CONFIG_MQTT_SERVER=mqtt://hass-mosquitto:1883
+    networks:
+      default: {}
+      mqtt_internal: {}
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
 
@@ -150,7 +162,7 @@ services:
       - SOLAR_PANELS_TARGET_ENTITY_ID=${SOLAR_PANELS_TARGET_ENTITY_ID}
       - DEFAULTS_SOLAR_PANELS_CLEANLINESS_SCORE=${DEFAULTS_SOLAR_PANELS_CLEANLINESS_SCORE:-100}
       - DEFAULTS_SOLAR_PANELS_CONFIDENCE=${DEFAULTS_SOLAR_PANELS_CONFIDENCE:-0.0}
-      - RAIN_VISUAL_CAMERA_ENTITY_ID=${RAIN_VISUAL_CAMERA_ENTITY_ID}
+      - RAIN_VISUAL_CAMERA_ENTITY_IDS=${RAIN_VISUAL_CAMERA_ENTITY_IDS:-camera.northern_roof_clear,camera.backyard_pano_snapshots_clear}
       - RAIN_VISUAL_TARGET_ENTITY_ID=${RAIN_VISUAL_TARGET_ENTITY_ID}
       - DEFAULTS_RAIN_VISUAL_STATE=${DEFAULTS_RAIN_VISUAL_STATE:-unknown}
       - DEFAULTS_RAIN_VISUAL_CONFIDENCE=${DEFAULTS_RAIN_VISUAL_CONFIDENCE:-0}
